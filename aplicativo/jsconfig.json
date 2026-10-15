@@ -1,0 +1,20 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@/assets/*": [
+        "./assets/*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.js"
+, "src/app/_layout.jsx", "src/app/index.jsx", "src/app/inicio.jsx", "src/app/perfil.jsx", "src/app/alimentos.jsx", "src/app/carrinho.jsx", "src/app/cadastro.jsx", "src/app/explore.jsx", "src/app/login.jsx", "src/app/questionario.jsx", "src/components/app-tabs.web.jsx", "src/components/app-tabs.jsx", "src/components/animated-icon.web.jsx", "src/components/animated-icon.jsx", "src/components/external-link.jsx", "src/components/hint-row.jsx", "src/components/themed-text.jsx", "src/components/themed-view.jsx", "src/components/web-badge.jsx", "src/constants/theme.js", "src/components/ui/collapsible.jsx"  ]
+}
