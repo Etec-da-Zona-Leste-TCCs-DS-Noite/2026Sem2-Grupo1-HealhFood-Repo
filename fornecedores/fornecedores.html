@@ -1,0 +1,127 @@
+
+<!DOCTYPE html> <!-- Define o documento como HTML5. -->
+<html lang="pt-BR"> <!-- Define o idioma português brasileiro. -->
+<head> <!-- Abre as configurações da página. -->
+<meta charset="UTF-8"> <!-- Habilita acentos e caracteres especiais. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Adapta o layout a diferentes telas. -->
+<title>Health Food | Fornecedores</title> <!-- Nome exibido na aba. -->
+<link rel="stylesheet" href="fornecedores.css"> <!-- Conecta o CSS. -->
+<script src="fornecedores.js" defer></script> <!-- Conecta o JavaScript após carregar o HTML. -->
+</head> <!-- Fecha as configurações. -->
+<body> <!-- Inicia a interface visível. -->
+
+<aside class="sidebar"> <!-- Cria o menu lateral. -->
+  <div class="brand"> <!-- Agrupa a marca. -->
+    <div class="brand-symbol">✚</div> <!-- Mostra o símbolo da saúde. -->
+    <div><strong>Health Food</strong><small>Gestão de Fornecedores</small></div> <!-- Identifica o sistema. -->
+  </div> <!-- Encerra a marca. -->
+  <p class="nav-label">GERENCIAMENTO</p> <!-- Título do menu. -->
+  <nav aria-label="Menu principal"> <!-- Inicia a navegação. -->
+    <button class="nav-link active" data-page="dashboard">▦ <span>Visão geral</span></button> <!-- Abre os indicadores. -->
+    <button class="nav-link" data-page="fornecedores">▤ <span>Fornecedores</span></button> <!-- Abre a lista de empresas. -->
+    <button class="nav-link" data-page="contratos">▣ <span>Contratos</span></button> <!-- Abre os contratos. -->
+    <button class="nav-link" data-page="relatorios">◫ <span>Relatórios</span></button> <!-- Abre relatórios. -->
+  </nav> <!-- Fecha a navegação. -->
+  <div class="sidebar-bottom"> <!-- Rodapé do menu. -->
+    <span class="avatar">HF</span> <!-- Iniciais da empresa. -->
+    <div><strong>Equipe Administrativa</strong><small>Acesso demonstrativo</small></div> <!-- Descrição da equipe. -->
+  </div> <!-- Fecha o rodapé do menu. -->
+</aside> <!-- Fecha a barra lateral. -->
+
+<main class="main"> <!-- Abre a área central. -->
+  <header class="topbar"> <!-- Cria o cabeçalho. -->
+    <div><h1 id="page-title">Visão geral</h1><p>Controle sua rede de abastecimento e parcerias.</p></div> <!-- Exibe o título atual. -->
+    <span class="demo">● Protótipo acadêmico</span> <!-- Identifica a demonstração. -->
+  </header> <!-- Fecha o cabeçalho. -->
+
+  <section class="page active" id="dashboard"> <!-- Página inicial. -->
+    <div class="hero"> <!-- Cria o banner de boas-vindas. -->
+      <span>HEALTH FOOD • SUPPLY MANAGEMENT</span> <!-- Identifica a divisão do projeto. -->
+      <h2>Seus fornecedores em um só lugar.</h2> <!-- Mensagem principal. -->
+      <p>Gerencie parceiros, acompanhe contratos e organize o fornecimento de alimentos.</p> <!-- Explica a finalidade. -->
+      <button class="hero-button" data-go="fornecedores" type="button">Gerenciar fornecedores →</button> <!-- Navega para fornecedores. -->
+    </div> <!-- Fecha o banner. -->
+
+    <div class="stats"> <!-- Agrupa os indicadores. -->
+      <article class="stat"><span>Fornecedores</span><strong id="stat-total">0</strong><small>Total cadastrado</small></article> <!-- Conta todos os fornecedores. -->
+      <article class="stat"><span>Ativos</span><strong id="stat-ativos">0</strong><small>Parcerias em operação</small></article> <!-- Conta fornecedores ativos. -->
+      <article class="stat"><span>Em análise</span><strong id="stat-analise">0</strong><small>Aguardando aprovação</small></article> <!-- Conta análises pendentes. -->
+      <article class="stat"><span>Contratos a vencer</span><strong id="stat-vencimentos">0</strong><small>Próximos 30 dias</small></article> <!-- Conta vencimentos. -->
+    </div> <!-- Fecha os indicadores. -->
+
+    <div class="two-columns"> <!-- Cria duas colunas inferiores. -->
+      <article class="panel"> <!-- Cartão de fornecedores recentes. -->
+        <div class="panel-heading"><h3>Fornecedores recentes</h3><button class="text-button" data-go="fornecedores">Ver todos →</button></div> <!-- Cabeçalho do cartão. -->
+        <div id="recentes" class="recent-list"></div> <!-- Lista preenchida pelo JavaScript. -->
+      </article> <!-- Fecha o cartão. -->
+      <article class="panel"> <!-- Cartão de categorias. -->
+        <div class="panel-heading"><h3>Categorias de fornecimento</h3></div> <!-- Título do gráfico. -->
+        <div id="categorias-grafico" class="category-chart"></div> <!-- Barras geradas pelo JavaScript. -->
+      </article> <!-- Fecha o cartão. -->
+    </div> <!-- Fecha as colunas. -->
+  </section> <!-- Fecha a visão geral. -->
+
+  <section class="page" id="fornecedores"> <!-- Página de gestão de fornecedores. -->
+    <div class="section-title"><div><h2>Fornecedores</h2><p>Cadastre, consulte e atualize seus parceiros comerciais.</p></div><button class="primary-button" id="novo-fornecedor">+ Novo fornecedor</button></div> <!-- Título e ação principal. -->
+
+    <div class="panel form-panel" id="form-area"> <!-- Cartão do formulário. -->
+      <div class="panel-heading"><h3 id="form-title">Cadastrar fornecedor</h3><button class="text-button" id="cancelar-form" type="button">Limpar campos</button></div> <!-- Controles do formulário. -->
+      <form id="supplier-form"> <!-- Inicia o formulário. -->
+        <div class="form-grid"> <!-- Organiza os campos em colunas. -->
+          <label>Razão social / Nome da empresa <input name="nome" maxlength="120" required placeholder="Ex.: Distribuidora Natural"></label> <!-- Nome empresarial. -->
+          <label>Nome fantasia <input name="fantasia" maxlength="100" placeholder="Nome conhecido comercialmente"></label> <!-- Nome de divulgação. -->
+          <label>CNPJ <input name="cnpj" inputmode="numeric" maxlength="18" placeholder="00.000.000/0000-00"></label> <!-- Documento empresarial opcional. -->
+          <label>Categoria <select name="categoria" required><option value="">Selecione</option><option>Hortifruti</option><option>Grãos e cereais</option><option>Bebidas</option><option>Produtos sem glúten</option><option>Produtos sem lactose</option><option>Alimentos orgânicos</option><option>Embalagens</option><option>Outros</option></select></label> <!-- Classifica o fornecedor. -->
+          <label>Telefone / WhatsApp <input name="telefone" maxlength="30" required placeholder="(11) 99999-9999"></label> <!-- Contato telefônico. -->
+          <label>E-mail comercial <input type="email" name="email" maxlength="140" required placeholder="contato@empresa.com"></label> <!-- Contato eletrônico. -->
+          <label>Cidade <input name="cidade" maxlength="100" required placeholder="São Paulo"></label> <!-- Cidade da empresa. -->
+          <label>UF <select name="uf" required><option value="">Selecione</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select></label> <!-- Estado brasileiro. -->
+          <label class="wide">Endereço <input name="endereco" maxlength="200" placeholder="Rua, número, bairro e complemento"></label> <!-- Localização do fornecedor. -->
+          <label class="wide">Produtos fornecidos <input name="produtos" maxlength="300" placeholder="Ex.: verduras, arroz integral, leite vegetal"></label> <!-- Lista resumida de produtos. -->
+          <label>Status <select name="status"><option>Em análise</option><option>Ativo</option><option>Inativo</option></select></label> <!-- Situação administrativa. -->
+          <label>Início da parceria <input type="date" name="inicio"></label> <!-- Data de início. -->
+          <label>Vencimento do contrato <input type="date" name="vencimento"></label> <!-- Data prevista de vencimento. -->
+          <label class="wide">Observações <textarea name="observacoes" rows="3" maxlength="1000" placeholder="Documentação, particularidades e observações comerciais"></textarea></label> <!-- Observações adicionais. -->
+        </div> <!-- Fecha os campos. -->
+        <div class="form-actions"><button type="button" class="outline-button" id="cancelar-edicao">Cancelar</button><button type="submit" class="primary-button" id="submit-supplier">Salvar fornecedor</button></div> <!-- Botões de controle. -->
+      </form> <!-- Fecha o formulário. -->
+    </div> <!-- Fecha o cartão do cadastro. -->
+
+    <div class="panel"> <!-- Cartão da listagem. -->
+      <div class="panel-heading"><div><h3>Fornecedores cadastrados</h3><p id="list-count">0 registros</p></div><button class="outline-button" id="export-fornecedores">Exportar CSV</button></div> <!-- Título, contagem e exportação. -->
+      <div class="filters"> <!-- Agrupa pesquisa e filtros. -->
+        <input id="search-supplier" type="search" placeholder="Buscar nome, CNPJ, cidade ou produto..."> <!-- Campo de pesquisa. -->
+        <select id="filter-category"><option value="">Todas as categorias</option><option>Hortifruti</option><option>Grãos e cereais</option><option>Bebidas</option><option>Produtos sem glúten</option><option>Produtos sem lactose</option><option>Alimentos orgânicos</option><option>Embalagens</option><option>Outros</option></select> <!-- Filtra categorias. -->
+        <select id="filter-status"><option value="">Todos os status</option><option>Ativo</option><option>Em análise</option><option>Inativo</option></select> <!-- Filtra situações. -->
+      </div> <!-- Fecha os filtros. -->
+      <div class="table-scroll"> <!-- Permite rolar tabelas em telas menores. -->
+        <table><thead><tr><th>Empresa</th><th>Categoria</th><th>Contato</th><th>Localização</th><th>Status</th><th>Ações</th></tr></thead><tbody id="supplier-table"></tbody></table> <!-- Tabela atualizada pelo JavaScript. -->
+      </div> <!-- Fecha a rolagem. -->
+    </div> <!-- Fecha o cartão. -->
+  </section> <!-- Fecha fornecedores. -->
+
+  <section class="page" id="contratos"> <!-- Página dedicada aos contratos. -->
+    <div class="section-title"><div><h2>Contratos e vencimentos</h2><p>Acompanhe datas importantes das parcerias cadastradas.</p></div></div> <!-- Apresenta a seção. -->
+    <div class="panel"> <!-- Cartão de contratos. -->
+      <div class="panel-heading"><h3>Controle de contratos</h3></div> <!-- Título da tabela. -->
+      <div class="table-scroll"><table><thead><tr><th>Fornecedor</th><th>Início</th><th>Vencimento</th><th>Situação do prazo</th><th>Ação</th></tr></thead><tbody id="contracts-table"></tbody></table></div> <!-- Tabela de vencimentos. -->
+    </div> <!-- Fecha o cartão. -->
+  </section> <!-- Fecha contratos. -->
+
+  <section class="page" id="relatorios"> <!-- Página de relatórios. -->
+    <div class="section-title"><div><h2>Relatórios</h2><p>Analise a composição da sua rede de fornecedores.</p></div></div> <!-- Apresenta a seção. -->
+    <div class="stats"> <!-- Cria indicadores detalhados. -->
+      <article class="stat"><span>Total de empresas</span><strong id="report-total">0</strong></article> <!-- Total cadastrado. -->
+      <article class="stat"><span>Fornecedores ativos</span><strong id="report-active">0</strong></article> <!-- Total ativo. -->
+      <article class="stat"><span>Inativos</span><strong id="report-inactive">0</strong></article> <!-- Total inativo. -->
+      <article class="stat"><span>Em análise</span><strong id="report-review">0</strong></article> <!-- Total em análise. -->
+    </div> <!-- Fecha os indicadores. -->
+    <div class="panel"><div class="panel-heading"><h3>Distribuição por categoria</h3><button class="outline-button" id="export-report">Exportar fornecedores</button></div><div id="report-categories" class="category-chart"></div></div> <!-- Resumo por categoria. -->
+  </section> <!-- Fecha relatórios. -->
+
+  <footer>Health Food © 2026 • Sistema demonstrativo de gestão de fornecedores.</footer> <!-- Rodapé institucional. -->
+</main> <!-- Fecha o conteúdo principal. -->
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div> <!-- Área de mensagens automáticas. -->
+</body> <!-- Fecha o corpo. -->
+</html> <!-- Encerra o HTML. -->
