@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "aplicativo",
+    "name": "Health Food",
     "slug": "aplicativo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "aplicativo",
-    "userInterfaceStyle": "automatic",
+    "scheme": "healthfood",
+    "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/expo.icon"
     },
@@ -20,7 +20,7 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -28,15 +28,11 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#367A4C",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
       ]
-    ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    }
+    ]
   }
 }

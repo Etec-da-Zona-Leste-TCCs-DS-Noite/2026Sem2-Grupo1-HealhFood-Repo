@@ -1,58 +1,73 @@
-import {
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
+import { cores } from '../theme';
+
+// variante: 'primario' (padrão), 'secundario' ou 'perigo'
 export default function Botao({
   titulo,
   onPress,
   carregando = false,
   desabilitado = false,
+  variante = 'primario',
   estilo,
-  estiloTexto,
 }) {
+  const inativo = desabilitado || carregando;
+  const secundario = variante === 'secundario';
+  const perigo = variante === 'perigo';
+
   return (
-    <TouchableOpacity
-      style={[
-        styles.botao,
-        desabilitado && styles.desabilitado,
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      disabled={inativo}
+      style={({ pressed }) => [
+        styles.base,
+        secundario && styles.secundario,
+        perigo && styles.perigo,
+        inativo && styles.inativo,
+        pressed && styles.pressionado,
         estilo,
       ]}
-      onPress={onPress}
-      disabled={desabilitado || carregando}
-      activeOpacity={0.8}
     >
       {carregando ? (
-        <ActivityIndicator color="#FFFFFF" />
+        <ActivityIndicator color={secundario || perigo ? cores.verde : '#FFFFFF'} />
       ) : (
-        <Text style={[styles.texto, estiloTexto]}>
+        <Text
+          style={[
+            styles.texto,
+            secundario && styles.textoSecundario,
+            perigo && styles.textoPerigo,
+          ]}
+        >
           {titulo}
         </Text>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  botao: {
-    backgroundColor: '#367A4C',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 12,
+  base: {
+    minHeight: 52,
+    borderRadius: 14,
+    backgroundColor: cores.verde,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 50,
+    paddingHorizontal: 18,
   },
-
-  desabilitado: {
-    opacity: 0.6,
+  secundario: {
+    backgroundColor: cores.cartao,
+    borderWidth: 1,
+    borderColor: cores.verde,
   },
-
-  texto: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+  perigo: {
+    backgroundColor: cores.cartao,
+    borderWidth: 1,
+    borderColor: cores.erro,
   },
+  inativo: { opacity: 0.55 },
+  pressionado: { opacity: 0.85 },
+  texto: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  textoSecundario: { color: cores.verde },
+  textoPerigo: { color: cores.erro },
 });

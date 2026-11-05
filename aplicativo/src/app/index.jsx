@@ -1,145 +1,58 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  ScrollView,
-} from 'react-native';
+import { Redirect, router } from 'expo-router';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { router } from 'expo-router';
+import Botao from '../components/Botao';
+import Carregando from '../components/Carregando';
+import Tela from '../components/Tela';
+import { useApp } from '../context/AppContext';
+import { cores } from '../theme';
 
-import { Botao } from '../components/Botao';
+export default function Boasvindas() {
+  const { carregando, usuario } = useApp();
 
-export default function Index() {
+  if (carregando) return <Carregando />;
+  if (usuario) return <Redirect href="/inicio" />;
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.conteudo}
-      >
-        <View style={styles.logoContainer}>
-          <Text style={styles.icone}>🥗</Text>
+    <Tela estiloConteudo={styles.conteudo}>
+      <View style={styles.marca}>
+        <Text style={styles.icone}>🥗</Text>
+        <Text style={styles.logo}>Health Food</Text>
+        <Text style={styles.subtitulo}>Alimentação personalizada para você</Text>
+      </View>
 
-          <Text style={styles.logo}>
-            Health Food
-          </Text>
+      <View style={styles.card}>
+        <Text style={styles.titulo}>Sua alimentação começa aqui.</Text>
+        <Text style={styles.descricao}>
+          Descubra opções alimentares considerando suas restrições e preferências.
+        </Text>
 
-          <Text style={styles.subtitulo}>
-            Alimentação personalizada para você
-          </Text>
-        </View>
+        <Botao titulo="Criar minha conta" onPress={() => router.push('/cadastro')} />
+        <Botao
+          titulo="Já tenho uma conta"
+          variante="secundario"
+          onPress={() => router.push('/login')}
+          estilo={styles.segundo}
+        />
 
-        <View style={styles.card}>
-          <Text style={styles.titulo}>
-            Sua alimentação começa aqui.
-          </Text>
-
-          <Text style={styles.descricao}>
-            Descubra opções alimentares considerando
-            suas restrições e preferências.
-          </Text>
-
-          <Botao
-            titulo="Criar minha conta"
-            onPress={() => router.push('/cadastro')}
-            estilo={styles.botao}
-          />
-
-          <Botao
-            titulo="Já tenho uma conta"
-            onPress={() => router.push('/login')}
-            estilo={styles.botaoSecundario}
-            estiloTexto={styles.textoSecundario}
-          />
-
-          <Text style={styles.aviso}>
-            O Health Food auxilia na escolha de alimentos,
-            mas não substitui orientações médicas ou
-            nutricionais.
-          </Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        <Text style={styles.aviso}>
+          O Health Food auxilia na escolha de alimentos, mas não substitui orientações médicas ou
+          nutricionais.
+        </Text>
+      </View>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F7F5EF',
-  },
-
-  conteudo: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 35,
-  },
-
-  icone: {
-    fontSize: 65,
-    marginBottom: 8,
-  },
-
-  logo: {
-    fontSize: 34,
-    fontWeight: 'bold',
-    color: '#367A4C',
-  },
-
-  subtitulo: {
-    fontSize: 14,
-    color: '#667568',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-
-  card: {
-    backgroundColor: '#FFFFFF',
-    padding: 24,
-    borderRadius: 20,
-    elevation: 3,
-  },
-
-  titulo: {
-    fontSize: 25,
-    fontWeight: 'bold',
-    color: '#244B32',
-    marginBottom: 14,
-    textAlign: 'center',
-  },
-
-  descricao: {
-    fontSize: 15,
-    color: '#626B63',
-    lineHeight: 23,
-    textAlign: 'center',
-    marginBottom: 25,
-  },
-
-  botao: {
-    marginBottom: 12,
-  },
-
-  botaoSecundario: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#367A4C',
-    marginBottom: 10,
-  },
-
-  textoSecundario: {
-    color: '#367A4C',
-  },
-
-  aviso: {
-    fontSize: 11,
-    color: '#777777',
-    lineHeight: 16,
-    textAlign: 'center',
-    marginTop: 15,
-  },
+  conteudo: { justifyContent: 'center' },
+  marca: { alignItems: 'center', marginBottom: 32 },
+  icone: { fontSize: 64, marginBottom: 8 },
+  logo: { fontSize: 34, fontWeight: '800', color: cores.verde },
+  subtitulo: { fontSize: 14, color: cores.textoSuave, marginTop: 8, textAlign: 'center' },
+  card: { backgroundColor: cores.cartao, padding: 24, borderRadius: 20, borderWidth: 1, borderColor: cores.borda },
+  titulo: { fontSize: 24, fontWeight: '800', color: cores.texto, textAlign: 'center', marginBottom: 12 },
+  descricao: { fontSize: 15, color: cores.textoSuave, lineHeight: 23, textAlign: 'center', marginBottom: 24 },
+  segundo: { marginTop: 12 },
+  aviso: { fontSize: 11, color: '#777777', lineHeight: 16, textAlign: 'center', marginTop: 16 },
 });

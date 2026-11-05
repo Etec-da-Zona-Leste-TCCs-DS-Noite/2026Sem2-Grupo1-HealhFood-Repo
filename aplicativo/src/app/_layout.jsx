@@ -1,15 +1,19 @@
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+
+import { AppProvider } from '../context/AppContext';
+import { cores } from '../theme';
 
 export default function RootLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        animation: 'slide_from_right',
-        contentStyle: {
-          backgroundColor: '#F7F5EF',
-        },
-      }}
-    />
+    <AppProvider>
+      <StatusBar style="dark" />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: cores.fundo },
+        }}
+      />
+    </AppProvider>
   );
 }

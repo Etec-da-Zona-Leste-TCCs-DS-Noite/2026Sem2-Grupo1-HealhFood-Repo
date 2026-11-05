@@ -1,56 +1,57 @@
-# Welcome to your Expo app 👋
+# Health Food - aplicativo do cliente
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+App em **JavaScript** (Expo + React Native + Expo Router). Roda no celular, no emulador e no navegador.
+Esta versão **não depende de backend**: contas, perfil, carrinho e pedidos ficam guardados no aparelho.
+Os produtos vêm de `src/data/produtos.js` (dados de demonstração).
 
-## Get started
+## Como rodar
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Requisitos: Node.js (versão LTS ou mais recente) e, para o celular, o app **Expo Go** atualizado.
 
 ```bash
-npm run reset-project
+cd aplicativo
+npm install
+npx expo install --fix   # alinha as versões dos pacotes com o Expo
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+No terminal que abrir:
 
-### Other setup steps
+- **Celular:** leia o QR code com o Expo Go (celular e computador na mesma rede Wi-Fi).
+- **Android (emulador):** tecle `a`.
+- **iOS (simulador, só no Mac):** tecle `i`.
+- **Navegador:** tecle `w`.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+Se algo ficar estranho depois de mexer em arquivos de configuração: `npx expo start -c` (limpa o cache).
 
-## Learn more
+## Fluxo do app
 
-To learn more about developing your project with Expo, look at the following resources:
+1. Boas-vindas -> **Cadastro** ou **Login**
+2. **Questionário** de restrições (alergias, lactose, glúten, vegano...). Pode ser editado depois no Perfil.
+3. Abas: **Início**, **Alimentos**, **Carrinho**, **Pedidos**, **Perfil**
+4. Os alimentos são avaliados contra o perfil: *combina*, *confira antes de consumir* ou *contém item que você evita*.
+5. O carrinho gera **um pedido por restaurante**, com status `Pendente` (mesmos status do painel administrativo).
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Estrutura
 
-## Join the community
+```
+src/
+  app/            telas (cada arquivo é uma rota)
+    (app)/        telas com abas: inicio, alimentos, carrinho, pedidos, perfil
+    produto/[id]  detalhe do produto
+  components/     Botao, Campo, Tela, CardProduto, Selo...
+  context/        AppContext: estado global (usuário, perfil, carrinho)
+  services/       ponto de integração com a API (veja docs/INTEGRACAO.md)
+  data/           produtos de demonstração
+  utils/          regras de restrição, formatação, diálogos
+```
 
-Join our community of developers creating universal apps.
+## Integração com o backend
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Leia **docs/INTEGRACAO.md**. Resumindo: toda a comunicação com dados passa pelos arquivos de
+`src/services/`. Para ligar a API, basta trocar o corpo dessas funções; as telas não mudam.
+
+## Observações
+
+- A senha do cadastro é guardada sem proteção no aparelho, **só para demonstração**. Autenticação de verdade deve ser feita no backend.
+- O app auxilia na escolha de alimentos, mas não substitui a leitura do rótulo nem orientação médica ou nutricional.
