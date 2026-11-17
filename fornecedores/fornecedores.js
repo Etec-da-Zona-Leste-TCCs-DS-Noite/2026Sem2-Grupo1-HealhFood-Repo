@@ -1,398 +1,773 @@
-
-// Define uma chave exclusiva para armazenar os fornecedores.
-const STORAGE_KEY = "healthfood_fornecedores_v1";
-
-// Recupera os fornecedores salvos no navegador.
-function carregarFornecedores() {
-  try { // Inicia a leitura protegida contra erros.
-    const conteudo = localStorage.getItem(STORAGE_KEY); // Lê o armazenamento do navegador.
-    const registros = conteudo ? JSON.parse(conteudo) : []; // Transforma o texto salvo em uma lista.
-    return Array.isArray(registros) ? registros : []; // Garante que o resultado seja uma lista.
-  } catch (erro) { // Trata erros de leitura.
-    console.error("Falha ao carregar fornecedores:", erro); // Mostra o problema no console.
-    return []; // Retorna uma lista vazia quando necessário.
-  } // Finaliza o tratamento de erros.
-} // Finaliza a função de carregamento.
-
-// Guarda os fornecedores na memória do programa.
-let fornecedores = carregarFornecedores();
-
-// Identifica o fornecedor que está sendo editado.
-let idEmEdicao = null;
-
-// Armazena o identificador de um aviso temporário.
-let avisoTimer = null;
-
-// Obtém um elemento do HTML por seu identificador.
+// Base exclusiva deste protótipo do restaurante parceiro.
+const STORAGE_KEY = "freefood_restaurante_parceiro_v1";
 const elemento = id => document.getElementById(id);
 
-// Protege os textos exibidos nas tabelas.
-function escapar(valor) {
-  const mapa = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }; // Define caracteres especiais.
-  return String(valor ?? "").replace(/[&<>"']/g, caracter => mapa[caracter]); // Substitui caracteres perigosos.
-} // Finaliza a proteção dos textos.
+const moeda = valor =>
+  Number(valor || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
 
-// Mostra uma mensagem de confirmação na tela.
-function avisar(mensagem) {
-  const aviso = elemento("toast"); // Localiza o aviso visual.
-  aviso.textContent = mensagem; // Insere a mensagem como texto seguro.
-  aviso.classList.add("show"); // Exibe a mensagem.
-  clearTimeout(avisoTimer); // Cancela o fechamento anterior.
-  avisoTimer = setTimeout(() => aviso.classList.remove("show"), 3000); // Esconde após três segundos.
-} // Finaliza a função de avisos.
+const escapar = valor =>
+  String(valor ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[c]));
 
-// Salva os fornecedores no localStorage.
-function salvar() {
-  try { // Tenta salvar a lista.
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(fornecedores)); // Converte e grava os registros.
-    atualizarTudo(); // Atualiza os indicadores e tabelas.
-    return true; // Confirma que o salvamento funcionou.
-  } catch (erro) { // Trata erros de armazenamento.
-    console.error("Falha ao salvar fornecedores:", erro); // Registra o problema.
-    alert("Não foi possível salvar os dados neste navegador."); // Informa o usuário.
-    return false; // Indica falha no salvamento.
-  } // Finaliza o tratamento.
-} // Finaliza a função de salvamento.
+const identificador = () =>
+  globalThis.crypto?.randomUUID?.() ||
+  `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-// Altera a página mostrada no sistema.
+let banco = {
+  restaurante: null,
+  produtos: [],
+  pedidos: []
+};
+
+let produtoEmEdicao = null;
+let pedidoSelecionado = null;
+let avisoTimer;
+
+// Recupera os dados deste restaurante.
+try {
+  const salvo = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+
+  if (salvo && typeof salvo === "object") {
+    banco.restaurante =
+      salvo.restaurante && typeof salvo.restaurante === "object"
+        ? salvo.restaurante
+        : null;
+
+    banco.produtos = Array.isArray(salvo.produtos) ? salvo.produtos : [];
+    banco.pedidos = Array.isArray(salvo.pedidos) ? salvo.pedidos : [];
+  }
+} catch (erro) {
+  console.error(erro);
+  alert("Não foi possível ler os dados salvos. Verifique o armazenamento deste navegador.");
+}
+
+function avisar(texto) {
+  elemento("toast").textContent = texto;
+  elemento("toast").classList.add("show");
+
+  clearTimeout(avisoTimer);
+
+  avisoTimer = setTimeout(() => {
+    elemento("toast").classList.remove("show");
+  }, 3500);
+}
+
+// A memória e a interface só são atualizadas após a gravação funcionar.
+function salvar(proximo) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(proximo));
+  } catch (erro) {
+    console.error(erro);
+    alert("Não foi possível salvar. Os campos foram mantidos para você tentar novamente.");
+    return false;
+  }
+
+  banco = proximo;
+  atualizarTudo();
+  return true;
+}
+
 function navegar(pagina) {
-  document.querySelectorAll(".page").forEach(item => item.classList.remove("active")); // Oculta as páginas.
-  document.querySelectorAll(".nav-link").forEach(item => item.classList.remove("active")); // Remove o destaque dos botões.
-  elemento(pagina).classList.add("active"); // Mostra a página escolhida.
-  const botao = document.querySelector(`.nav-link[data-page="${pagina}"]`); // Encontra o botão correspondente.
-  botao.classList.add("active"); // Destaca a opção selecionada.
-  elemento("page-title").textContent = botao.querySelector("span").textContent; // Atualiza o título superior.
-  window.scrollTo({ top: 0, behavior: "smooth" }); // Retorna ao começo da página.
-} // Finaliza a navegação.
+  document.querySelectorAll(".page").forEach(p => {
+    p.classList.toggle("active", p.id === pagina);
+  });
 
-// Configura os botões do menu.
-document.querySelectorAll(".nav-link").forEach(botao => {
-  botao.addEventListener("click", () => navegar(botao.dataset.page)); // Abre a página solicitada.
-}); // Finaliza os eventos do menu.
+  document.querySelectorAll(".nav-link").forEach(b => {
+    b.classList.toggle("active", b.dataset.page === pagina);
+  });
 
-// Configura os atalhos para outras páginas.
-document.querySelectorAll("[data-go]").forEach(botao => {
-  botao.addEventListener("click", () => navegar(botao.dataset.go)); // Abre a página indicada pelo botão.
-}); // Finaliza a configuração dos atalhos.
+  const botao = document.querySelector(
+    `.nav-link[data-page="${pagina}"]`
+  );
 
-// Define o botão que inicia um cadastro.
-elemento("novo-fornecedor").addEventListener("click", () => {
-  navegar("fornecedores"); // Garante que a página de fornecedores esteja aberta.
-  limparFormulario(); // Limpa qualquer edição anterior.
-  elemento("form-area").scrollIntoView({ behavior: "smooth", block: "start" }); // Leva o usuário até o cadastro.
-  document.querySelector('#supplier-form [name="nome"]').focus(); // Posiciona o cursor no primeiro campo.
-}); // Finaliza o evento de novo fornecedor.
+  elemento("page-title").textContent =
+    botao.querySelector("span").textContent;
 
-// Remove o modo de edição e limpa os campos.
-function limparFormulario() {
-  elemento("supplier-form").reset(); // Limpa o formulário.
-  idEmEdicao = null; // Remove a identificação do registro editado.
-  elemento("form-title").textContent = "Cadastrar fornecedor"; // Restaura o título original.
-  elemento("submit-supplier").textContent = "Salvar fornecedor"; // Restaura o botão de salvamento.
-} // Finaliza a limpeza do formulário.
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
-// Configura o botão que limpa o formulário.
-elemento("cancelar-form").addEventListener("click", limparFormulario); // Limpa os dados digitados.
+document.querySelectorAll("[data-page], [data-go]").forEach(b => {
+  b.addEventListener("click", () => {
+    navegar(b.dataset.page || b.dataset.go);
+  });
+});
 
-// Configura o botão que cancela uma edição.
-elemento("cancelar-edicao").addEventListener("click", limparFormulario); // Cancela e limpa o formulário.
+function campos(form) {
+  return Object.fromEntries(
+    [...new FormData(form)].map(([chave, valor]) => [
+      chave,
+      String(valor).trim()
+    ])
+  );
+}
 
-// Verifica se um CNPJ informado possui 14 dígitos.
-function formatoCnpjValido(cnpj) {
-  const digitos = cnpj.replace(/\D/g, ""); // Remove pontos, barras e hífens.
-  return digitos.length === 0 || digitos.length === 14; // Aceita campo vazio ou 14 dígitos.
-} // Finaliza a verificação do formato.
+function exigirRestaurante() {
+  if (banco.restaurante) return true;
 
-// Verifica se o CNPJ já está cadastrado.
-function cnpjDuplicado(cnpj) {
-  const digitos = cnpj.replace(/\D/g, ""); // Obtém apenas os números.
-  if (!digitos) return false; // Ignora campos vazios.
-  return fornecedores.some(item => item.id !== idEmEdicao && (item.cnpj || "").replace(/\D/g, "") === digitos); // Procura outra empresa com o mesmo CNPJ.
-} // Finaliza a verificação de duplicidade.
+  navegar("restaurante");
+  avisar("Cadastre seu restaurante antes de continuar.");
+  return false;
+}
 
-// Escuta o envio do formulário de fornecedores.
-elemento("supplier-form").addEventListener("submit", evento => {
-  evento.preventDefault(); // Evita o recarregamento do site.
-  const formulario = evento.currentTarget; // Recupera o formulário utilizado.
-  const campos = Object.fromEntries(new FormData(formulario).entries()); // Lê todos os campos.
-  Object.keys(campos).forEach(chave => campos[chave] = campos[chave].trim()); // Remove espaços extras dos textos.
+function preencherRestaurante() {
+  const form = elemento("restaurante-form");
 
-  if (!formatoCnpjValido(campos.cnpj)) { // Verifica o formato do documento.
-    alert("O CNPJ deve conter 14 dígitos, ou pode ficar vazio."); // Explica o problema.
-    return; // Impede o salvamento incorreto.
-  } // Finaliza a primeira verificação.
+  if (!banco.restaurante) return;
 
-  if (cnpjDuplicado(campos.cnpj)) { // Verifica a existência de outro cadastro com o documento.
-    alert("Já existe um fornecedor cadastrado com esse CNPJ."); // Informa a duplicidade.
-    return; // Interrompe o cadastro duplicado.
-  } // Finaliza a verificação de duplicidade.
+  Object.entries(banco.restaurante).forEach(([chave, valor]) => {
+    const campo = form.elements.namedItem(chave);
+    if (campo) campo.value = valor;
+  });
+}
 
-  if (idEmEdicao !== null) { // Verifica se o usuário está editando.
-    const indice = fornecedores.findIndex(item => item.id === idEmEdicao); // Procura o registro original.
-    if (indice === -1) return; // Impede a edição de um registro inexistente.
-    fornecedores[indice] = { ...fornecedores[indice], ...campos }; // Atualiza os dados do fornecedor.
-  } else { // Executa quando o usuário está criando um registro.
-    const id = crypto.randomUUID(); // Gera um identificador exclusivo.
-    fornecedores.unshift({ id, ...campos, criadoEm: new Date().toISOString() }); // Adiciona o novo fornecedor no início da lista.
-  } // Finaliza a decisão entre cadastro e edição.
+elemento("restaurante-form").addEventListener("submit", evento => {
+  evento.preventDefault();
 
-  if (salvar()) { // Verifica se os dados foram gravados.
-    limparFormulario(); // Limpa o formulário após salvar.
-    avisar("Fornecedor salvo com sucesso!"); // Exibe a confirmação.
-  } // Finaliza o processamento bem-sucedido.
-}); // Finaliza o evento do formulário.
+  const restaurante = campos(evento.currentTarget);
+  const digitos = restaurante.cnpj.replace(/\D/g, "");
 
-// Devolve a classe visual correspondente ao status.
-function classeStatus(status) {
-  if (status === "Inativo") return "danger"; // Vermelho para inativos.
-  if (status === "Em análise") return "warning"; // Amarelo para análise.
-  return ""; // Verde para ativos.
-} // Finaliza a classificação visual.
+  if (restaurante.cnpj && digitos.length !== 14) {
+    return avisar("Informe o CNPJ com 14 dígitos ou deixe o campo vazio.");
+  }
 
-// Cria uma etiqueta colorida de status.
-function criarStatus(status) {
-  return `<span class="tag ${classeStatus(status)}">${escapar(status)}</span>`; // Retorna uma etiqueta segura.
-} // Finaliza a etiqueta.
+  restaurante.uf = restaurante.uf.toUpperCase();
 
-// Recupera os fornecedores conforme pesquisa e filtros.
-function fornecedoresFiltrados() {
-  const pesquisa = elemento("search-supplier").value.toLocaleLowerCase("pt-BR").trim(); // Obtém o termo de pesquisa.
-  const categoria = elemento("filter-category").value; // Obtém a categoria selecionada.
-  const status = elemento("filter-status").value; // Obtém o status selecionado.
-  return fornecedores.filter(item => { // Percorre os fornecedores cadastrados.
-    const texto = [item.nome, item.fantasia, item.cnpj, item.cidade, item.produtos].join(" ").toLocaleLowerCase("pt-BR"); // Reúne os campos pesquisáveis.
-    const correspondePesquisa = texto.includes(pesquisa); // Verifica se o texto contém a pesquisa.
-    const correspondeCategoria = !categoria || item.categoria === categoria; // Verifica a categoria.
-    const correspondeStatus = !status || item.status === status; // Verifica a situação.
-    return correspondePesquisa && correspondeCategoria && correspondeStatus; // Retorna os registros compatíveis.
-  }); // Finaliza a filtragem.
-} // Finaliza a função de pesquisa.
+  if (salvar({ ...banco, restaurante })) {
+    avisar("Dados do seu restaurante salvos!");
+  }
+});
 
-// Atualiza a tabela dos fornecedores.
-function mostrarFornecedores() {
-  const registros = fornecedoresFiltrados(); // Recupera os fornecedores após aplicar os filtros.
-  elemento("list-count").textContent = `${registros.length} registro(s) encontrado(s)`; // Atualiza a contagem da tabela.
-  if (registros.length === 0) { // Verifica se a lista está vazia.
-    elemento("supplier-table").innerHTML = '<tr><td colspan="6" class="empty">Nenhum fornecedor encontrado.</td></tr>'; // Apresenta uma mensagem.
-    return; // Encerra a função.
-  } // Finaliza a verificação de lista vazia.
+// Cadastro e edição do cardápio.
+function limparProduto() {
+  produtoEmEdicao = null;
 
-  elemento("supplier-table").innerHTML = registros.map(item => { // Gera uma linha para cada fornecedor.
-    const nome = `<strong class="cell-title">${escapar(item.nome)}</strong><small class="cell-sub">${escapar(item.fantasia || item.cnpj || "Fornecedor cadastrado")}</small>`; // Monta a identificação da empresa.
-    const contato = `${escapar(item.telefone)}<small class="cell-sub">${escapar(item.email)}</small>`; // Monta o contato.
-    const local = `${escapar(item.cidade)} - ${escapar(item.uf)}`; // Monta a localização.
-    const acoes = `<button class="row-button" data-action="view" data-id="${item.id}">Detalhes</button><button class="row-button" data-action="edit" data-id="${item.id}">Editar</button><button class="row-button delete" data-action="delete" data-id="${item.id}">Excluir</button>`; // Cria os botões de cada registro.
-    return `<tr><td>${nome}</td><td>${escapar(item.categoria)}</td><td>${contato}</td><td>${local}</td><td>${criarStatus(item.status)}</td><td>${acoes}</td></tr>`; // Retorna a linha completa.
-  }).join(""); // Insere todas as linhas na tabela.
-} // Finaliza a apresentação dos fornecedores.
+  elemento("produto-form").reset();
 
-// Atualiza os resultados quando o usuário pesquisa.
-elemento("search-supplier").addEventListener("input", mostrarFornecedores); // Atualiza a tabela durante a digitação.
+  elemento("produto-titulo").textContent = "Cadastrar comida ou bebida";
+  elemento("salvar-produto").textContent = "Salvar produto";
+}
 
-// Atualiza os resultados ao escolher uma categoria.
-elemento("filter-category").addEventListener("change", mostrarFornecedores); // Aplica o filtro de categoria.
+elemento("cancelar-produto").addEventListener("click", limparProduto);
 
-// Atualiza os resultados ao escolher um status.
-elemento("filter-status").addEventListener("change", mostrarFornecedores); // Aplica o filtro de situação.
+elemento("produto-form").addEventListener("submit", evento => {
+  evento.preventDefault();
 
-// Calcula a quantidade de dias até determinada data.
-function diasAte(dataTexto) {
-  if (!dataTexto) return null; // Ignora datas não preenchidas.
-  const partes = dataTexto.split("-").map(Number); // Divide ano, mês e dia.
-  const destino = Date.UTC(partes[0], partes[1] - 1, partes[2]); // Converte a data de destino para UTC.
-  const hoje = new Date(); // Obtém a data atual.
-  const atual = Date.UTC(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()); // Converte somente o dia atual para UTC.
-  return Math.round((destino - atual) / 86400000); // Calcula a diferença em dias.
-} // Finaliza o cálculo de datas.
+  if (!exigirRestaurante()) return;
 
-// Formata datas para o padrão brasileiro.
-function dataBrasileira(valor) {
-  if (!valor) return "Não informado"; // Trata datas vazias.
-  const partes = valor.split("-"); // Divide a data em partes.
-  return `${partes[2]}/${partes[1]}/${partes[0]}`; // Retorna dia, mês e ano.
-} // Finaliza a formatação.
+  const produto = campos(evento.currentTarget);
 
-// Informa a situação de vencimento de um contrato.
-function situacaoContrato(data) {
-  const dias = diasAte(data); // Calcula os dias restantes.
-  if (dias === null) return { texto: "Sem vencimento", classe: "" }; // Identifica contratos sem data.
-  if (dias < 0) return { texto: "Vencido", classe: "danger" }; // Identifica datas vencidas.
-  if (dias === 0) return { texto: "Vence hoje", classe: "warning" }; // Identifica vencimento no dia.
-  if (dias <= 30) return { texto: `Vence em ${dias} dia(s)`, classe: "warning" }; // Identifica vencimentos próximos.
-  return { texto: "Dentro do prazo", classe: "" }; // Identifica contratos dentro do prazo.
-} // Finaliza a classificação do contrato.
+  produto.preco = Number(produto.preco);
+  produto.tempo = Number(produto.tempo);
 
-// Apresenta os contratos em uma tabela.
-function mostrarContratos() {
-  const corpo = elemento("contracts-table"); // Localiza a tabela.
-  if (fornecedores.length === 0) { // Verifica se há registros.
-    corpo.innerHTML = '<tr><td colspan="5" class="empty">Cadastre fornecedores para acompanhar os contratos.</td></tr>'; // Mostra uma orientação.
-    return; // Encerra a função.
-  } // Finaliza a verificação.
-  corpo.innerHTML = fornecedores.map(item => { // Percorre os fornecedores.
-    const situacao = situacaoContrato(item.vencimento); // Calcula a situação do contrato.
-    const etiqueta = `<span class="tag ${situacao.classe}">${situacao.texto}</span>`; // Gera o indicador de prazo.
-    return `<tr><td>${escapar(item.nome)}</td><td>${dataBrasileira(item.inicio)}</td><td>${dataBrasileira(item.vencimento)}</td><td>${etiqueta}</td><td><button class="row-button" data-action="edit" data-id="${item.id}">Editar contrato</button></td></tr>`; // Cria uma linha da tabela.
-  }).join(""); // Insere todas as linhas.
-} // Finaliza a lista dos contratos.
+  if (
+    !produto.nome ||
+    !produto.ingredientes ||
+    !produto.alergenicos ||
+    !Number.isFinite(produto.preco) ||
+    produto.preco <= 0
+  ) {
+    return avisar("Preencha as informações e informe um preço válido.");
+  }
 
-// Gera as quantidades de fornecedores por categoria.
-function contarCategorias() {
-  const contagem = {}; // Cria um objeto de contagens.
-  fornecedores.forEach(item => { // Percorre as empresas cadastradas.
-    const categoria = item.categoria || "Outros"; // Identifica a categoria.
-    contagem[categoria] = (contagem[categoria] || 0) + 1; // Acrescenta uma unidade na contagem.
-  }); // Finaliza o agrupamento.
-  return Object.entries(contagem).sort((a, b) => b[1] - a[1]); // Retorna categorias da maior para a menor.
-} // Finaliza a contagem por categoria.
+  produto.id = produtoEmEdicao || identificador();
 
-// Cria um gráfico horizontal utilizando HTML e CSS.
-function criarGrafico(destino) {
-  const categorias = contarCategorias(); // Obtém as categorias cadastradas.
-  if (categorias.length === 0) { // Verifica se o gráfico está vazio.
-    elemento(destino).innerHTML = '<p class="empty">Os gráficos aparecerão após o primeiro cadastro.</p>'; // Exibe uma mensagem.
-    return; // Encerra a função.
-  } // Finaliza a verificação.
-  const maior = categorias[0][1]; // Obtém a maior quantidade para calcular as proporções.
-  elemento(destino).innerHTML = categorias.map(([nome, quantidade]) => { // Percorre as categorias.
-    const largura = (quantidade / maior) * 100; // Calcula a largura proporcional da barra.
-    return `<div class="category-item"><div class="category-top"><span>${escapar(nome)}</span><strong>${quantidade}</strong></div><div class="category-track"><div class="category-fill" style="width:${largura}%"></div></div></div>`; // Monta o gráfico.
-  }).join(""); // Insere as barras na interface.
-} // Finaliza a criação do gráfico.
+  const produtos = produtoEmEdicao
+    ? banco.produtos.map(p => p.id === produto.id ? produto : p)
+    : [produto, ...banco.produtos];
 
-// Mostra os fornecedores cadastrados mais recentemente.
-function mostrarRecentes() {
-  const recentes = fornecedores.slice(0, 5); // Seleciona até cinco registros recentes.
-  if (recentes.length === 0) { // Verifica se ainda não há cadastros.
-    elemento("recentes").innerHTML = '<p class="empty">Nenhum fornecedor cadastrado.</p>'; // Mostra o estado inicial.
-    return; // Finaliza a função.
-  } // Encerra a verificação.
-  elemento("recentes").innerHTML = recentes.map(item => { // Percorre os registros recentes.
-    return `<div class="recent-item"><div><strong>${escapar(item.nome)}</strong><small>${escapar(item.categoria)}</small></div>${criarStatus(item.status)}</div>`; // Monta cada resumo.
-  }).join(""); // Insere a lista na página inicial.
-} // Finaliza os fornecedores recentes.
+  if (salvar({ ...banco, produtos })) {
+    limparProduto();
+    avisar("Produto salvo no seu cardápio!");
+  }
+});
 
-// Atualiza todos os indicadores do sistema.
-function atualizarIndicadores() {
-  const ativos = fornecedores.filter(item => item.status === "Ativo").length; // Conta os ativos.
-  const analise = fornecedores.filter(item => item.status === "Em análise").length; // Conta os pendentes de análise.
-  const inativos = fornecedores.filter(item => item.status === "Inativo").length; // Conta os inativos.
-  const vencimentos = fornecedores.filter(item => { // Percorre os fornecedores para encontrar vencimentos.
-    const dias = diasAte(item.vencimento); // Calcula o prazo restante.
-    return dias !== null && dias >= 0 && dias <= 30; // Conta vencimentos nos próximos 30 dias.
-  }).length; // Finaliza a contagem.
-  elemento("stat-total").textContent = fornecedores.length; // Atualiza o total geral.
-  elemento("stat-ativos").textContent = ativos; // Atualiza os parceiros ativos.
-  elemento("stat-analise").textContent = analise; // Atualiza os fornecedores em análise.
-  elemento("stat-vencimentos").textContent = vencimentos; // Atualiza os contratos próximos do vencimento.
-  elemento("report-total").textContent = fornecedores.length; // Atualiza o relatório geral.
-  elemento("report-active").textContent = ativos; // Atualiza o relatório de ativos.
-  elemento("report-inactive").textContent = inativos; // Atualiza o relatório de inativos.
-  elemento("report-review").textContent = analise; // Atualiza o relatório de análises.
-} // Finaliza os indicadores.
+function tag(texto) {
+  const classe = ["Cancelado", "Indisponível"].includes(texto)
+    ? "danger"
+    : ["Recebido", "Em preparo"].includes(texto)
+      ? "warning"
+      : "";
 
-// Preenche o formulário para editar um fornecedor existente.
-function editarFornecedor(id) {
-  const fornecedor = fornecedores.find(item => item.id === id); // Localiza o registro.
-  if (!fornecedor) return; // Encerra caso não exista.
-  navegar("fornecedores"); // Abre a página de fornecedores.
-  const formulario = elemento("supplier-form"); // Recupera o formulário.
-  formulario.reset(); // Limpa valores de uma edição anterior.
-  Object.keys(fornecedor).forEach(campo => { // Percorre as propriedades do fornecedor.
-    const entrada = formulario.elements.namedItem(campo); // Encontra o campo correspondente.
-    if (entrada) entrada.value = fornecedor[campo] || ""; // Insere o valor anterior.
-  }); // Finaliza o preenchimento.
-  idEmEdicao = id; // Guarda o fornecedor em edição.
-  elemento("form-title").textContent = "Editar fornecedor"; // Atualiza o título do formulário.
-  elemento("submit-supplier").textContent = "Salvar alterações"; // Altera o botão de envio.
-  elemento("form-area").scrollIntoView({ behavior: "smooth", block: "start" }); // Mostra o formulário na tela.
-} // Finaliza a edição de fornecedores.
+  return `<span class="tag ${classe}">${escapar(texto)}</span>`;
+}
 
-// Mostra informações detalhadas de um fornecedor.
-function verDetalhes(id) {
-  const fornecedor = fornecedores.find(item => item.id === id); // Encontra o fornecedor.
-  if (!fornecedor) return; // Encerra se não existir.
-  const detalhes = [ // Cria uma lista de informações para consulta.
-    `Empresa: ${fornecedor.nome}`, // Exibe o nome empresarial.
-    `Nome fantasia: ${fornecedor.fantasia || "Não informado"}`, // Exibe o nome comercial.
-    `CNPJ: ${fornecedor.cnpj || "Não informado"}`, // Exibe o documento cadastrado.
-    `Categoria: ${fornecedor.categoria}`, // Exibe o segmento.
-    `Telefone: ${fornecedor.telefone}`, // Exibe o telefone.
-    `E-mail: ${fornecedor.email}`, // Exibe o e-mail.
-    `Localização: ${fornecedor.cidade}/${fornecedor.uf}`, // Exibe cidade e estado.
-    `Endereço: ${fornecedor.endereco || "Não informado"}`, // Exibe o endereço.
-    `Produtos: ${fornecedor.produtos || "Não informado"}`, // Exibe os produtos.
-    `Status: ${fornecedor.status}`, // Exibe a situação.
-    `Início: ${dataBrasileira(fornecedor.inicio)}`, // Exibe o início da parceria.
-    `Vencimento: ${dataBrasileira(fornecedor.vencimento)}`, // Exibe o vencimento.
-    `Observações: ${fornecedor.observacoes || "Nenhuma"}` // Exibe as observações.
-  ].join("\n"); // Junta as informações em linhas.
-  alert(detalhes); // Abre a consulta de detalhes.
-} // Finaliza a visualização dos detalhes.
+function mostrarProdutos() {
+  const busca = elemento("busca-produto")
+    .value.toLocaleLowerCase("pt-BR").trim();
 
-// Exclui um fornecedor após confirmação.
-function excluirFornecedor(id) {
-  const fornecedor = fornecedores.find(item => item.id === id); // Localiza o registro.
-  if (!fornecedor) return; // Encerra se não existir.
-  if (!confirm(`Excluir o fornecedor "${fornecedor.nome}"?`)) return; // Solicita confirmação.
-  const anteriores = fornecedores; // Guarda temporariamente a lista antiga.
-  fornecedores = fornecedores.filter(item => item.id !== id); // Remove o fornecedor selecionado.
-  if (!salvar()) { fornecedores = anteriores; return; } // Restaura a lista se o salvamento falhar.
-  if (idEmEdicao === id) limparFormulario(); // Limpa o formulário se o registro estava em edição.
-  avisar("Fornecedor excluído."); // Confirma a exclusão.
-} // Finaliza a função de exclusão.
+  const filtro = elemento("filtro-produto").value;
 
-// Detecta cliques nos botões das tabelas.
+  const lista = banco.produtos.filter(p =>
+    `${p.nome} ${p.ingredientes}`
+      .toLocaleLowerCase("pt-BR")
+      .includes(busca) &&
+    (!filtro || p.disponibilidade === filtro)
+  );
+
+  elemento("produtos-tabela").innerHTML = lista.map(p => `
+    <tr>
+      <td>
+        <strong class="cell-title">${escapar(p.nome)}</strong>
+        <small class="cell-sub">${escapar(p.porcao)}</small>
+      </td>
+      <td>${moeda(p.preco)}</td>
+      <td>${escapar(p.categoria)}</td>
+      <td>${tag(p.disponibilidade)}</td>
+      <td>
+        <button class="row-button" data-action="produto-detalhes" data-id="${escapar(p.id)}">Detalhes</button>
+        <button class="row-button" data-action="produto-editar" data-id="${escapar(p.id)}">Editar</button>
+        <button class="row-button delete" data-action="produto-excluir" data-id="${escapar(p.id)}">Excluir</button>
+      </td>
+    </tr>
+  `).join("") || `
+    <tr>
+      <td colspan="5" class="empty">
+        Nenhum produto encontrado. Cadastre sua primeira comida ou bebida.
+      </td>
+    </tr>
+  `;
+}
+
+elemento("busca-produto").addEventListener("input", mostrarProdutos);
+elemento("filtro-produto").addEventListener("change", mostrarProdutos);
+
+// O pedido guarda uma cópia dos itens e preços para preservar seu histórico.
+function opcoesProdutos() {
+  return '<option value="">Selecione uma comida ou bebida</option>' +
+    banco.produtos
+      .filter(p => p.disponibilidade === "Disponível")
+      .map(p => `
+        <option value="${escapar(p.id)}">
+          ${escapar(p.nome)} — ${moeda(p.preco)}
+        </option>
+      `).join("");
+}
+
+function adicionarItem() {
+  const linha = document.createElement("div");
+  linha.className = "order-item";
+
+  linha.innerHTML = `
+    <label>
+      Produto
+      <select class="item-produto" required>
+        ${opcoesProdutos()}
+      </select>
+    </label>
+    <label>
+      Quantidade
+      <input class="item-quantidade" type="number"
+        min="1" max="999" step="1" value="1" required>
+    </label>
+    <button type="button" class="row-button delete" data-remove-item>
+      Remover
+    </button>
+  `;
+
+  elemento("itens-pedido").appendChild(linha);
+}
+
+function atualizarOpcoes() {
+  document.querySelectorAll(".item-produto").forEach(select => {
+    const anterior = select.value;
+    select.innerHTML = opcoesProdutos();
+
+    if ([...select.options].some(o => o.value === anterior)) {
+      select.value = anterior;
+    }
+  });
+
+  atualizarTotal();
+}
+
+function itensDoFormulario() {
+  return [...document.querySelectorAll(".order-item")].map(linha => {
+    const produto = banco.produtos.find(p =>
+      p.id === linha.querySelector(".item-produto").value &&
+      p.disponibilidade === "Disponível"
+    );
+
+    const quantidade = Number(
+      linha.querySelector(".item-quantidade").value
+    );
+
+    return produto
+      ? {
+          produtoId: produto.id,
+          nome: produto.nome,
+          preco: produto.preco,
+          quantidade
+        }
+      : null;
+  });
+}
+
+function atualizarTotal() {
+  const total = itensDoFormulario().reduce((soma, item) => {
+    const valido =
+      item &&
+      Number.isInteger(item.quantidade) &&
+      item.quantidade > 0;
+
+    return soma + (
+      valido
+        ? Math.round(item.preco * 100) * item.quantidade
+        : 0
+    );
+  }, 0) / 100;
+
+  elemento("pedido-total").textContent = moeda(total);
+}
+
+elemento("adicionar-item").addEventListener("click", adicionarItem);
+elemento("itens-pedido").addEventListener("input", atualizarTotal);
+elemento("itens-pedido").addEventListener("change", atualizarTotal);
+
+elemento("itens-pedido").addEventListener("click", evento => {
+  if (!evento.target.closest("[data-remove-item]")) return;
+
+  const linhas = elemento("itens-pedido").children;
+
+  if (linhas.length === 1) {
+    return avisar("Mantenha pelo menos um item no pedido.");
+  }
+
+  evento.target.closest(".order-item").remove();
+  atualizarTotal();
+});
+
+function ajustarEndereco() {
+  const entrega = elemento("pedido-modalidade").value === "Entrega";
+
+  elemento("pedido-endereco").required = entrega;
+  elemento("pedido-endereco").disabled = !entrega;
+}
+
+elemento("pedido-modalidade").addEventListener("change", ajustarEndereco);
+
+elemento("pedido-form").addEventListener("submit", evento => {
+  evento.preventDefault();
+
+  if (!exigirRestaurante()) return;
+
+  if (banco.restaurante.atendimento !== "Aberto para pedidos") {
+    return avisar(
+      "Seu restaurante está fechado para novos pedidos. Atualize o atendimento em Meu restaurante."
+    );
+  }
+
+  const pedido = campos(evento.currentTarget);
+
+  const modalidadeIncompativel =
+    (
+      pedido.modalidade === "Entrega" &&
+      banco.restaurante.modalidade === "Somente retirada"
+    ) ||
+    (
+      pedido.modalidade === "Retirada" &&
+      banco.restaurante.modalidade === "Somente entrega"
+    );
+
+  if (modalidadeIncompativel) {
+    return avisar("Essa modalidade não é oferecida pelo seu restaurante.");
+  }
+
+  const itens = itensDoFormulario();
+
+  if (
+    !pedido.cliente ||
+    !pedido.telefone ||
+    (pedido.modalidade === "Entrega" && !pedido.endereco) ||
+    !itens.length ||
+    itens.some(i =>
+      !i ||
+      !Number.isInteger(i.quantidade) ||
+      i.quantidade < 1 ||
+      i.quantidade > 999
+    )
+  ) {
+    return avisar(
+      "Informe os dados do cliente e selecione produtos disponíveis com quantidades válidas."
+    );
+  }
+
+  const agora = new Date().toISOString();
+
+  pedido.id = identificador();
+
+  pedido.numero =
+    Math.max(0, ...banco.pedidos.map(p => Number(p.numero) || 0)) + 1;
+
+  pedido.itens = itens;
+
+  pedido.total = itens.reduce(
+    (soma, i) => soma + Math.round(i.preco * 100) * i.quantidade,
+    0
+  ) / 100;
+
+  pedido.status = "Recebido";
+  pedido.criadoEm = agora;
+  pedido.historico = [{ status: "Recebido", data: agora }];
+
+  if (salvar({ ...banco, pedidos: [pedido, ...banco.pedidos] })) {
+    evento.currentTarget.reset();
+    elemento("itens-pedido").replaceChildren();
+
+    adicionarItem();
+    ajustarEndereco();
+    atualizarTotal();
+
+    pedidoSelecionado = pedido.id;
+    mostrarCaminho();
+
+    avisar(`Pedido #${pedido.numero} registrado!`);
+  }
+});
+
+// Fluxo do pedido: a retirada não passa pela etapa de entrega.
+function etapas(pedido) {
+  return pedido.modalidade === "Retirada"
+    ? ["Recebido", "Em preparo", "Pronto", "Concluído"]
+    : ["Recebido", "Em preparo", "Pronto", "Saiu para entrega", "Concluído"];
+}
+
+function proximaEtapa(pedido) {
+  if (["Cancelado", "Concluído"].includes(pedido.status)) return null;
+
+  const fluxo = etapas(pedido);
+  return fluxo[fluxo.indexOf(pedido.status) + 1] || null;
+}
+
+function mudarEtapa(id, cancelar = false) {
+  const pedido = banco.pedidos.find(p => p.id === id);
+
+  if (!pedido || ["Cancelado", "Concluído"].includes(pedido.status)) {
+    return;
+  }
+
+  if (cancelar && !confirm(`Cancelar o pedido #${pedido.numero}?`)) {
+    return;
+  }
+
+  const status = cancelar ? "Cancelado" : proximaEtapa(pedido);
+
+  if (!status) return;
+
+  const atualizado = {
+    ...pedido,
+    status,
+    historico: [
+      ...pedido.historico,
+      { status, data: new Date().toISOString() }
+    ]
+  };
+
+  if (
+    salvar({
+      ...banco,
+      pedidos: banco.pedidos.map(p => p.id === id ? atualizado : p)
+    })
+  ) {
+    avisar(`Pedido #${pedido.numero}: ${status}.`);
+  }
+}
+
+function mostrarPedidos() {
+  const busca = elemento("busca-pedido")
+    .value.toLocaleLowerCase("pt-BR").trim();
+
+  const filtro = elemento("filtro-pedido").value;
+
+  const lista = banco.pedidos.filter(p =>
+    `${p.cliente} #${p.numero}`
+      .toLocaleLowerCase("pt-BR")
+      .includes(busca) &&
+    (!filtro || p.status === filtro)
+  );
+
+  elemento("pedidos-tabela").innerHTML = lista.map(p => {
+    const proxima = proximaEtapa(p);
+
+    const acoes = `
+      <button class="row-button" data-action="pedido-ver" data-id="${escapar(p.id)}">
+        Ver caminho
+      </button>
+    ` + (
+      proxima
+        ? `
+          <button class="row-button" data-action="pedido-avancar" data-id="${escapar(p.id)}">
+            ${escapar(proxima)}
+          </button>
+          <button class="row-button delete" data-action="pedido-cancelar" data-id="${escapar(p.id)}">
+            Cancelar
+          </button>
+        `
+        : ""
+    );
+
+    return `
+      <tr>
+        <td>#${p.numero}</td>
+        <td>${escapar(p.cliente)}</td>
+        <td>${moeda(p.total)}</td>
+        <td>${escapar(p.modalidade)}</td>
+        <td>${tag(p.status)}</td>
+        <td>${acoes}</td>
+      </tr>
+    `;
+  }).join("") || `
+    <tr>
+      <td colspan="6" class="empty">Nenhum pedido encontrado.</td>
+    </tr>
+  `;
+}
+
+elemento("busca-pedido").addEventListener("input", mostrarPedidos);
+elemento("filtro-pedido").addEventListener("change", mostrarPedidos);
+
+function mostrarCaminho() {
+  const painel = elemento("caminho-pedido");
+  const pedido = banco.pedidos.find(p => p.id === pedidoSelecionado);
+
+  painel.hidden = !pedido;
+
+  if (!pedido) return;
+
+  const fluxo = pedido.status === "Cancelado"
+    ? [...etapas(pedido), "Cancelado"]
+    : etapas(pedido);
+
+  const itensTexto = pedido.itens.map(i =>
+    `${i.quantidade} × ${i.nome} (${moeda(i.preco)} cada)`
+  ).join("\n");
+
+  const detalhes = [
+    `${pedido.cliente} • ${pedido.telefone}`,
+    `${pedido.modalidade}: ${pedido.endereco || "Retirada no restaurante"}`,
+    itensTexto,
+    `Total: ${moeda(pedido.total)}`,
+    `Observações: ${pedido.observacoes || "Nenhuma"}`
+  ].join("\n");
+
+  painel.innerHTML = `
+    <div class="panel-heading">
+      <h3>Caminho do pedido #${pedido.numero}</h3>
+      ${tag(pedido.status)}
+    </div>
+    <p class="details-copy">${escapar(detalhes)}</p>
+    <ol class="order-steps">
+      ${fluxo.map(etapa => {
+        const marco = pedido.historico.find(h => h.status === etapa);
+
+        const descricao = marco
+          ? new Date(marco.data).toLocaleString("pt-BR")
+          : pedido.status === "Cancelado"
+            ? "Não realizada"
+            : "Aguardando";
+
+        return `
+          <li class="${marco ? "done" : ""} ${pedido.status === etapa ? "current" : ""}">
+            ${escapar(etapa)} — ${escapar(descricao)}
+          </li>
+        `;
+      }).join("")}
+    </ol>
+  `;
+}
+
+// Ações dos produtos e pedidos.
 document.addEventListener("click", evento => {
-  const botao = evento.target.closest("[data-action]"); // Identifica um botão de ação.
-  if (!botao) return; // Ignora os outros cliques.
-  const acao = botao.dataset.action; // Obtém a ação solicitada.
-  const id = botao.dataset.id; // Obtém o identificador do registro.
-  if (acao === "view") verDetalhes(id); // Abre os detalhes do fornecedor.
-  if (acao === "edit") editarFornecedor(id); // Abre a edição.
-  if (acao === "delete") excluirFornecedor(id); // Executa a exclusão.
-}); // Finaliza os eventos das tabelas.
+  const botao = evento.target.closest("[data-action]");
 
-// Prepara o conteúdo de um arquivo CSV.
-function gerarCSV() {
-  const colunas = ["nome", "fantasia", "cnpj", "categoria", "telefone", "email", "cidade", "uf", "endereco", "produtos", "status", "inicio", "vencimento", "observacoes"]; // Define os campos exportados.
-  const linhas = [colunas, ...fornecedores.map(item => colunas.map(campo => item[campo] || ""))]; // Reúne cabeçalho e registros.
-  return linhas.map(linha => linha.map(valor => { // Formata cada célula do arquivo.
-    const texto = String(valor).replace(/^[\s]*[=+\-@]/, "'$&"); // Evita interpretar conteúdo cadastrado como fórmula de planilha.
-    return `"${texto.replace(/"/g, '""')}"`; // Escapa aspas e envolve o texto entre aspas.
-  }).join(";")).join("\r\n"); // Junta colunas e linhas no formato CSV.
-} // Finaliza a geração do conteúdo.
+  if (!botao) return;
 
-// Inicia o download de um arquivo CSV.
-function exportarCSV() {
-  const conteudo = gerarCSV(); // Obtém os dados formatados.
-  const arquivo = new Blob(["\uFEFF", conteudo], { type: "text/csv;charset=utf-8" }); // Cria o arquivo com codificação UTF-8.
-  const endereco = URL.createObjectURL(arquivo); // Gera um endereço temporário.
-  const link = document.createElement("a"); // Cria um link temporário.
-  link.href = endereco; // Associa o arquivo ao link.
-  link.download = "healthfood-fornecedores.csv"; // Define o nome do download.
-  document.body.appendChild(link); // Insere o link na página.
-  link.click(); // Inicia o download.
-  link.remove(); // Remove o link temporário.
-  setTimeout(() => URL.revokeObjectURL(endereco), 1000); // Libera os recursos utilizados.
-  avisar("Relatório CSV gerado."); // Confirma a exportação.
-} // Finaliza a exportação.
+  const { action, id } = botao.dataset;
 
-// Configura o botão de exportação da lista.
-elemento("export-fornecedores").addEventListener("click", exportarCSV); // Exporta os fornecedores.
+  if (action === "pedido-ver") {
+    pedidoSelecionado = id;
+    mostrarCaminho();
 
-// Configura o botão de exportação dos relatórios.
-elemento("export-report").addEventListener("click", exportarCSV); // Exporta a mesma base de dados.
+    elemento("caminho-pedido").scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
 
-// Atualiza todas as partes do painel.
+  if (action === "pedido-avancar") mudarEtapa(id);
+  if (action === "pedido-cancelar") mudarEtapa(id, true);
+
+  const produto = banco.produtos.find(p => p.id === id);
+
+  if (!produto) return;
+
+  if (action === "produto-detalhes") {
+    alert([
+      produto.nome,
+      produto.descricao,
+      `Preço: ${moeda(produto.preco)}`,
+      `Porção: ${produto.porcao}`,
+      `Ingredientes: ${produto.ingredientes}`,
+      `Alergênicos e contato cruzado: ${produto.alergenicos}`,
+      `Característica declarada: ${produto.perfil}`,
+      `Preparo: ${produto.tempo} minutos`,
+      `Informação nutricional: ${produto.nutricao || "Não informada"}`
+    ].join("\n"));
+  }
+
+  if (action === "produto-editar") {
+    produtoEmEdicao = id;
+
+    Object.entries(produto).forEach(([chave, valor]) => {
+      const campo = elemento("produto-form").elements.namedItem(chave);
+      if (campo) campo.value = valor;
+    });
+
+    elemento("produto-titulo").textContent = "Editar comida ou bebida";
+    elemento("salvar-produto").textContent = "Salvar alterações";
+
+    elemento("produto-area").scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+
+  if (
+    action === "produto-excluir" &&
+    confirm(`Excluir "${produto.nome}" do cardápio? Os pedidos anteriores manterão seus itens.`)
+  ) {
+    if (
+      salvar({
+        ...banco,
+        produtos: banco.produtos.filter(p => p.id !== id)
+      })
+    ) {
+      if (produtoEmEdicao === id) limparProduto();
+      avisar("Produto excluído do cardápio.");
+    }
+  }
+});
+
 function atualizarTudo() {
-  mostrarFornecedores(); // Atualiza a tabela de fornecedores.
-  mostrarContratos(); // Atualiza o acompanhamento de contratos.
-  mostrarRecentes(); // Atualiza os fornecedores recentes.
-  criarGrafico("categorias-grafico"); // Atualiza as barras na visão geral.
-  criarGrafico("report-categories"); // Atualiza o gráfico dos relatórios.
-  atualizarIndicadores(); // Recalcula todos os totais.
-} // Finaliza a atualização geral.
+  elemento("nome-perfil").textContent =
+    banco.restaurante?.nome || "Meu restaurante";
 
-// Inicia o painel ao abrir o site.
-atualizarTudo(); // Exibe os dados armazenados ou o estado inicial vazio.
+  const concluidos = banco.pedidos.filter(p => p.status === "Concluído");
+
+  const vendas = concluidos.reduce(
+    (s, p) => s + Math.round(p.total * 100),
+    0
+  ) / 100;
+
+  elemento("stat-produtos").textContent = banco.produtos.length;
+
+  elemento("stat-andamento").textContent = banco.pedidos.filter(
+    p => !["Concluído", "Cancelado"].includes(p.status)
+  ).length;
+
+  elemento("stat-concluidos").textContent = concluidos.length;
+  elemento("stat-vendas").textContent = moeda(vendas);
+  elemento("report-total").textContent = banco.pedidos.length;
+  elemento("report-concluidos").textContent = concluidos.length;
+
+  elemento("report-cancelados").textContent = banco.pedidos.filter(
+    p => p.status === "Cancelado"
+  ).length;
+
+  elemento("report-ticket").textContent = moeda(
+    concluidos.length ? vendas / concluidos.length : 0
+  );
+
+  elemento("recentes").innerHTML = banco.pedidos.slice(0, 5).map(p => `
+    <div class="recent-item">
+      <div>
+        <strong>#${p.numero} • ${escapar(p.cliente)}</strong>
+        <small>${moeda(p.total)} • ${escapar(p.modalidade)}</small>
+      </div>
+      ${tag(p.status)}
+    </div>
+  `).join("") || '<p class="empty">Seus pedidos recentes aparecerão aqui.</p>';
+
+  const contagem = [
+    "Recebido",
+    "Em preparo",
+    "Pronto",
+    "Saiu para entrega",
+    "Concluído",
+    "Cancelado"
+  ].map(status => [
+    status,
+    banco.pedidos.filter(p => p.status === status).length
+  ]);
+
+  const maior = Math.max(1, ...contagem.map(([, n]) => n));
+
+  elemento("categorias-grafico").innerHTML = contagem.map(([status, n]) => `
+    <div class="category-item">
+      <div class="category-top">
+        <span>${status}</span>
+        <strong>${n}</strong>
+      </div>
+      <div class="category-track">
+        <div class="category-fill" style="width:${n / maior * 100}%"></div>
+      </div>
+    </div>
+  `).join("");
+
+  mostrarProdutos();
+  mostrarPedidos();
+  mostrarCaminho();
+  atualizarOpcoes();
+}
+
+// Exporta apenas os pedidos deste restaurante.
+elemento("exportar-pedidos").addEventListener("click", () => {
+  const linhas = [
+    ["Pedido", "Cliente", "Itens", "Total", "Modalidade", "Etapa", "Data"],
+    ...banco.pedidos.map(p => [
+      p.numero,
+      p.cliente,
+      p.itens.map(i => `${i.quantidade} x ${i.nome}`).join(" | "),
+      p.total.toFixed(2).replace(".", ","),
+      p.modalidade,
+      p.status,
+      new Date(p.criadoEm).toLocaleString("pt-BR")
+    ])
+  ];
+
+  const csv = linhas.map(linha =>
+    linha.map(valor => {
+      const texto = String(valor).replace(/^\s*[=+@-]/, "'$&");
+      return `"${texto.replace(/"/g, '""')}"`;
+    }).join(";")
+  ).join("\r\n");
+
+  const url = URL.createObjectURL(
+    new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" })
+  );
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "freefood-meus-pedidos.csv";
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+  avisar("Relatório dos seus pedidos exportado.");
+});
+
+// Inicializa a interface.
+preencherRestaurante();
+adicionarItem();
+ajustarEndereco();
+atualizarTudo();
