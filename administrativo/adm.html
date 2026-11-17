@@ -1,4 +1,3 @@
-
 <!DOCTYPE html> <!-- Declara que este arquivo utiliza HTML5. -->
 <html lang="pt-BR"> <!-- Define português brasileiro como idioma. -->
 <head> <!-- Inicia as configurações do documento. -->
@@ -17,9 +16,7 @@
 
     <nav class="menu"> <!-- Inicia o menu de navegação. -->
         <button class="menu-btn ativo" data-page="dashboard">▦ Visão geral</button> <!-- Acessa o painel inicial. -->
-        <button class="menu-btn" data-page="fornecedores">▤ Fornecedores</button> <!-- Acessa fornecedores. -->
         <button class="menu-btn" data-page="restaurantes">▣ Restaurantes parceiros</button> <!-- Acessa restaurantes. -->
-        <button class="menu-btn" data-page="produtos">◈ Catálogo de produtos</button> <!-- Acessa produtos. -->
         <button class="menu-btn" data-page="pedidos">▥ Pedidos</button> <!-- Acessa pedidos. -->
         <button class="menu-btn" data-page="financeiro">◉ Gestão financeira</button> <!-- Acessa finanças. -->
     </nav> <!-- Finaliza o menu. -->
@@ -43,11 +40,10 @@
         <div class="boas-vindas"> <!-- Cria o banner principal. -->
             <span>HEALTH FOOD • GESTÃO EMPRESARIAL</span> <!-- Identifica a empresa. -->
             <h2>Bem-vindo ao painel administrativo!</h2> <!-- Apresenta o painel. -->
-            <p>Controle seus parceiros, produtos, pedidos e resultados financeiros.</p> <!-- Explica a finalidade do sistema. -->
+            <p>Controle seus parceiros, pedidos e resultados financeiros.</p> <!-- Explica a finalidade do sistema. -->
         </div> <!-- Finaliza o banner. -->
 
         <div class="indicadores"> <!-- Organiza os indicadores principais. -->
-            <article class="indicador"><p>Fornecedores</p><h2 id="total-fornecedores">0</h2><small>Empresas cadastradas</small></article> <!-- Quantidade de fornecedores. -->
             <article class="indicador"><p>Restaurantes</p><h2 id="total-restaurantes">0</h2><small>Parceiros cadastrados</small></article> <!-- Quantidade de restaurantes. -->
             <article class="indicador"><p>Receitas</p><h2 id="total-receitas">R$ 0,00</h2><small>Entradas registradas</small></article> <!-- Valor total de receitas. -->
             <article class="indicador"><p>Despesas</p><h2 id="total-despesas">R$ 0,00</h2><small>Saídas registradas</small></article> <!-- Valor total de despesas. -->
@@ -64,31 +60,12 @@
 
             <article class="cartao"> <!-- Cria o resumo operacional. -->
                 <h3>Resumo operacional</h3> <!-- Apresenta o resumo. -->
-                <div class="linha-resumo"><span>Produtos cadastrados</span><strong id="total-produtos">0</strong></div> <!-- Mostra os produtos. -->
                 <div class="linha-resumo"><span>Pedidos registrados</span><strong id="total-pedidos">0</strong></div> <!-- Mostra os pedidos. -->
                 <div class="linha-resumo"><span>Restaurantes ativos</span><strong id="restaurantes-ativos">0</strong></div> <!-- Mostra os parceiros ativos. -->
                 <div class="linha-resumo"><span>Pedidos pendentes</span><strong id="pedidos-pendentes">0</strong></div> <!-- Mostra pedidos pendentes. -->
             </article> <!-- Finaliza o resumo operacional. -->
         </div> <!-- Finaliza as duas colunas. -->
     </section> <!-- Finaliza a visão geral. -->
-
-    <section class="pagina" id="fornecedores"> <!-- Cria a página de fornecedores. -->
-        <div class="titulo-secao"><h2>Fornecedores</h2><p>Cadastre e gerencie as empresas fornecedoras.</p></div> <!-- Descreve a seção. -->
-        <article class="cartao"> <!-- Cria o formulário de cadastro. -->
-            <h3>Adicionar fornecedor</h3> <!-- Apresenta o formulário. -->
-            <form id="form-fornecedores" class="formulario"> <!-- Agrupa os campos do cadastro. -->
-                <input name="nome" placeholder="Nome da empresa" required> <!-- Recebe o nome. -->
-                <input name="contato" placeholder="Telefone / WhatsApp" required> <!-- Recebe o contato. -->
-                <input name="email" type="email" placeholder="E-mail comercial" required> <!-- Recebe o e-mail. -->
-                <input name="categoria" placeholder="Categoria (ex.: hortifruti)" required> <!-- Recebe a categoria. -->
-                <button type="submit" class="botao-verde">+ Salvar fornecedor</button> <!-- Salva o cadastro. -->
-            </form> <!-- Finaliza o formulário. -->
-        </article> <!-- Finaliza o cartão. -->
-        <article class="cartao"> <!-- Cria a listagem. -->
-            <h3>Fornecedores cadastrados</h3> <!-- Apresenta a tabela. -->
-            <div class="tabela-rolagem"><table><thead><tr><th>Empresa</th><th>Contato</th><th>E-mail</th><th>Categoria</th><th>Ações</th></tr></thead><tbody id="lista-fornecedores"></tbody></table></div> <!-- Exibe os fornecedores. -->
-        </article> <!-- Finaliza a listagem. -->
-    </section> <!-- Finaliza fornecedores. -->
 
     <section class="pagina" id="restaurantes"> <!-- Cria a página de restaurantes. -->
         <div class="titulo-secao"><h2>Restaurantes parceiros</h2><p>Administre os estabelecimentos parceiros.</p></div> <!-- Descreve a seção. -->
@@ -107,25 +84,6 @@
             <div class="tabela-rolagem"><table><thead><tr><th>Restaurante</th><th>Cidade</th><th>Contato</th><th>Status</th><th>Ações</th></tr></thead><tbody id="lista-restaurantes"></tbody></table></div> <!-- Exibe os parceiros. -->
         </article> <!-- Finaliza a listagem. -->
     </section> <!-- Finaliza restaurantes. -->
-
-    <section class="pagina" id="produtos"> <!-- Cria a página de produtos. -->
-        <div class="titulo-secao"><h2>Catálogo de produtos</h2><p>Cadastre os alimentos e bebidas da plataforma.</p></div> <!-- Descreve o catálogo. -->
-        <article class="cartao"> <!-- Cria o formulário de produtos. -->
-            <h3>Adicionar produto</h3> <!-- Apresenta o formulário. -->
-            <form id="form-produtos" class="formulario"> <!-- Agrupa os campos. -->
-                <input name="nome" placeholder="Nome do alimento ou bebida" required> <!-- Recebe o nome do produto. -->
-                <input name="preco" type="number" min="0" step="0.01" placeholder="Preço em R$" required> <!-- Recebe o preço. -->
-                <input name="restaurante" placeholder="Restaurante responsável" required> <!-- Recebe o restaurante. -->
-                <select name="categoria"><option>Refeição</option><option>Lanche</option><option>Bebida</option><option>Sobremesa</option></select> <!-- Seleciona a categoria. -->
-                <button type="submit" class="botao-verde">+ Salvar produto</button> <!-- Salva o produto. -->
-            </form> <!-- Finaliza o formulário. -->
-            <p class="aviso">A compatibilidade com restrições alimentares ainda precisa de validação. O cadastro não garante segurança para consumo.</p> <!-- Informa a limitação do protótipo. -->
-        </article> <!-- Finaliza o cartão. -->
-        <article class="cartao"> <!-- Cria a lista de produtos. -->
-            <h3>Produtos cadastrados</h3> <!-- Apresenta a tabela. -->
-            <div class="tabela-rolagem"><table><thead><tr><th>Produto</th><th>Preço</th><th>Restaurante</th><th>Categoria</th><th>Ações</th></tr></thead><tbody id="lista-produtos"></tbody></table></div> <!-- Exibe os produtos. -->
-        </article> <!-- Finaliza a listagem. -->
-    </section> <!-- Finaliza produtos. -->
 
     <section class="pagina" id="pedidos"> <!-- Cria a página de pedidos. -->
         <div class="titulo-secao"><h2>Gestão de pedidos</h2><p>Acompanhe os pedidos registrados na demonstração.</p></div> <!-- Descreve a seção. -->
