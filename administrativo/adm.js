@@ -1,12 +1,9 @@
-
 // Define um identificador para os dados desta versão do projeto.
 const CHAVE = "healthfood_admin_zero_v2";
 
 // Cria um banco de dados demonstrativo inicialmente vazio.
 const dadosIniciais = {
-    fornecedores: [], // Lista dos fornecedores cadastrados.
     restaurantes: [], // Lista dos restaurantes parceiros.
-    produtos: [], // Lista de alimentos e bebidas.
     pedidos: [], // Lista de pedidos registrados.
     financeiro: [] // Lista de receitas e despesas.
 }; // Finaliza a estrutura inicial dos dados.
@@ -17,9 +14,7 @@ function carregarDados() {
         const salvo = localStorage.getItem(CHAVE); // Busca os dados armazenados.
         const resultado = salvo ? JSON.parse(salvo) : {}; // Converte os dados encontrados.
         return { // Retorna a estrutura completa do banco.
-            fornecedores: Array.isArray(resultado.fornecedores) ? resultado.fornecedores : [], // Recupera fornecedores.
             restaurantes: Array.isArray(resultado.restaurantes) ? resultado.restaurantes : [], // Recupera restaurantes.
-            produtos: Array.isArray(resultado.produtos) ? resultado.produtos : [], // Recupera produtos.
             pedidos: Array.isArray(resultado.pedidos) ? resultado.pedidos : [], // Recupera pedidos.
             financeiro: Array.isArray(resultado.financeiro) ? resultado.financeiro : [] // Recupera finanças.
         }; // Finaliza o objeto recuperado.
@@ -72,16 +67,14 @@ document.querySelectorAll(".menu-btn").forEach(botao => {
 
 // Define a ordem das informações exibidas em cada tabela.
 const colunas = {
-    fornecedores: ["nome", "contato", "email", "categoria"], // Campos dos fornecedores.
     restaurantes: ["nome", "cidade", "contato", "status"], // Campos dos restaurantes.
-    produtos: ["nome", "preco", "restaurante", "categoria"], // Campos dos produtos.
     pedidos: ["cliente", "restaurante", "valor", "status"], // Campos dos pedidos.
     financeiro: ["descricao", "tipo", "valor", "data"] // Campos das movimentações.
 }; // Finaliza a configuração das tabelas.
 
 // Identifica os campos que armazenam valores monetários.
 function campoMonetario(tipo, campo) {
-    return (tipo === "produtos" && campo === "preco") || (["pedidos", "financeiro"].includes(tipo) && campo === "valor"); // Informa quando formatar como dinheiro.
+    return ["pedidos", "financeiro"].includes(tipo) && campo === "valor"; // Informa quando formatar como dinheiro.
 } // Finaliza a verificação dos campos monetários.
 
 // Cria etiquetas coloridas de situações e tipos.
@@ -118,7 +111,7 @@ document.querySelectorAll("form[id^='form-']").forEach(formulario => {
         evento.preventDefault(); // Impede o recarregamento da página.
         const tipo = formulario.id.replace("form-", ""); // Identifica a categoria.
         const valores = Object.fromEntries(new FormData(formulario).entries()); // Recupera todos os campos preenchidos.
-        ["preco", "valor"].forEach(campo => { // Percorre os possíveis campos numéricos.
+        ["valor"].forEach(campo => { // Percorre os possíveis campos numéricos.
             if (valores[campo] !== undefined) valores[campo] = Number(valores[campo]); // Transforma o valor em número.
         }); // Finaliza a conversão monetária.
         if (edicao && edicao.tipo === tipo) { // Verifica se é uma edição.
@@ -177,12 +170,10 @@ function atualizarIndicadores() {
     const despesas = calcularTotal("Despesa"); // Calcula as despesas cadastradas.
     const saldo = receitas - despesas; // Obtém o resultado financeiro.
     const total = receitas + despesas; // Calcula a soma utilizada nas barras.
-    document.getElementById("total-fornecedores").textContent = banco.fornecedores.length; // Atualiza fornecedores.
     document.getElementById("total-restaurantes").textContent = banco.restaurantes.length; // Atualiza restaurantes.
     document.getElementById("total-receitas").textContent = moeda(receitas); // Atualiza receitas da visão geral.
     document.getElementById("total-despesas").textContent = moeda(despesas); // Atualiza despesas da visão geral.
     document.getElementById("saldo-geral").textContent = moeda(saldo); // Atualiza o resultado da visão geral.
-    document.getElementById("total-produtos").textContent = banco.produtos.length; // Atualiza a contagem de produtos.
     document.getElementById("total-pedidos").textContent = banco.pedidos.length; // Atualiza a contagem de pedidos.
     document.getElementById("restaurantes-ativos").textContent = banco.restaurantes.filter(item => item.status === "Ativo").length; // Conta restaurantes ativos.
     document.getElementById("pedidos-pendentes").textContent = banco.pedidos.filter(item => item.status === "Pendente").length; // Conta pedidos pendentes.
