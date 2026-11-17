@@ -1,4 +1,3 @@
-
 :root { /* Inicia as variáveis visuais do projeto. */
   --green: #17764d; /* Verde principal da empresa. */
   --dark: #11583d; /* Verde escuro para títulos e destaques. */
@@ -34,7 +33,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .brand { display: flex; align-items: center; gap: 12px; padding: 5px 10px; } /* Organiza a marca. */
 .brand-symbol { width: 44px; height: 44px; background: var(--green); color: white; display: grid; place-items: center; border-radius: 13px; font-size: 26px; } /* Estiliza o símbolo da marca. */
 .brand strong { display: block; color: var(--dark); font-size: 21px; letter-spacing: -0.8px; } /* Formata o nome da empresa. */
-.brand small { display: block; color: var(--muted); font-size: 11px; margin-top: 4px; } /* Identifica a área de fornecedores. */
+.brand small { display: block; color: var(--muted); font-size: 11px; margin-top: 4px; } /* Identifica a área do restaurante parceiro. */
 .nav-label { color: #98a89e; font-size: 10px; font-weight: bold; letter-spacing: 2px; margin: 48px 13px 15px; } /* Estiliza o título do menu. */
 .sidebar nav { display: flex; flex-direction: column; gap: 7px; } /* Organiza os links verticalmente. */
 .nav-link { text-align: left; background: transparent; border: 0; border-radius: 10px; padding: 15px; color: #61766a; font-size: 13px; font-weight: bold; display: flex; gap: 12px; } /* Estiliza cada botão lateral. */
@@ -89,6 +88,7 @@ textarea { resize: vertical; } /* Permite alterar a altura das observações. */
 .form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 23px; } /* Alinha os botões de cadastro. */
 .filters { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; margin-bottom: 20px; } /* Organiza a busca e os filtros. */
 .table-scroll { overflow-x: auto; width: 100%; } /* Permite rolagem horizontal das tabelas. */
+
 table { width: 100%; border-collapse: collapse; text-align: left; } /* Define a estrutura das tabelas. */
 th { background: #f7faf8; padding: 15px 12px; font-size: 11px; color: #748679; white-space: nowrap; } /* Estiliza os cabeçalhos. */
 td { padding: 16px 12px; border-bottom: 1px solid var(--border); font-size: 12px; } /* Estiliza as células de dados. */
@@ -102,7 +102,7 @@ tr:last-child td { border-bottom: none; } /* Remove a borda da última linha. */
 .row-button.delete { color: var(--red); border-color: #f0dada; } /* Diferencia a exclusão. */
 .row-button:hover { background: #f4faf6; } /* Destaca as ações ao passar o mouse. */
 .empty { text-align: center; color: var(--muted); padding: 30px 10px; } /* Estiliza mensagens de listas vazias. */
-.recent-item { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); } /* Organiza fornecedores recentes. */
+.recent-item { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); } /* Organiza pedidos recentes. */
 .recent-item:last-child { border-bottom: none; } /* Remove o divisor final. */
 .recent-item strong { display: block; font-size: 13px; margin-bottom: 6px; } /* Formata o nome recente. */
 .recent-item small { color: var(--muted); font-size: 11px; } /* Formata a categoria recente. */
@@ -137,3 +137,25 @@ footer { text-align: center; color: #98a89e; font-size: 11px; margin: 35px 0 5px
   .filters { grid-template-columns: 1fr; } /* Empilha os filtros. */
   .panel { padding: 18px; } /* Diminui o espaçamento dos cartões. */
 } /* Encerra a responsividade. */
+
+/* Complementos para cardápio e acompanhamento dos pedidos. */
+.body-copy, .helper { font-size: 13px; line-height: 1.7; color: var(--muted); }
+.helper { font-size: 12px; margin-top: 20px; }
+.stat strong { overflow-wrap: anywhere; }
+.item-heading { margin-top: 25px; }
+.order-item { display: grid; grid-template-columns: minmax(0, 1fr) 100px auto; gap: 12px; align-items: end; margin-bottom: 12px; }
+.order-item label { font-size: 12px; display: grid; gap: 8px; }
+.order-total { text-align: right; color: var(--dark); }
+.order-steps { list-style: none; padding: 0; display: grid; gap: 10px; }
+.order-steps li { padding: 12px; border: 1px solid var(--border); border-radius: 9px; color: var(--muted); }
+.order-steps .done { background: var(--soft); color: var(--dark); }
+.order-steps .current { border-color: var(--green); font-weight: bold; }
+.details-copy { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.7; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+[hidden] { display: none !important; }
+
+@media (max-width: 760px) {
+  .order-item { grid-template-columns: minmax(0, 1fr) 80px; }
+  .order-item button { grid-column: 1 / -1; justify-self: end; }
+  .panel-heading { flex-wrap: wrap; }
+}
