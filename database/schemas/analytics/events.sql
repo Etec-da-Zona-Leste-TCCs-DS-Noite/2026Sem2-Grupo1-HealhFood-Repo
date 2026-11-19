@@ -1,0 +1,1 @@
+CREATE TABLE user_events(id UUID PRIMARY KEY);

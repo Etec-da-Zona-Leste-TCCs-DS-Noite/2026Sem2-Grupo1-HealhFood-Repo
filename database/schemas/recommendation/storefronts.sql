@@ -1,0 +1,1 @@
+CREATE TABLE personalized_storefronts(id UUID PRIMARY KEY);

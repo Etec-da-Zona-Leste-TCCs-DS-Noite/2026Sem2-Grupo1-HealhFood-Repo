@@ -1,0 +1,1 @@
+CREATE TABLE nutrition_profiles(user_id UUID PRIMARY KEY);
