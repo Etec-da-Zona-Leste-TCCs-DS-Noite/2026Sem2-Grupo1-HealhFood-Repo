@@ -1,1 +1,0 @@
-CREATE TABLE dietary_restrictions(id UUID PRIMARY KEY,name VARCHAR(255));

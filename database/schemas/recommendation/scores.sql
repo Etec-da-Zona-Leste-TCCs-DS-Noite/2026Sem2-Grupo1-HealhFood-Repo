@@ -1,1 +1,0 @@
-CREATE TABLE recommendation_scores(user_id UUID,product_id UUID);
